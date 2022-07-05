@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import connection from "../config/database.js";
 import authRepositories  from "../repositories/authRepositories.js";
 
 export const postSignIn = async (req, res) => {
@@ -11,10 +10,7 @@ export const postSignIn = async (req, res) => {
       return res.sendStatus(422);
     }
 
-    const existingUsers = await connection.query(
-      `SELECT * FROM "users" WHERE "email"=$1`,
-      [email]
-    );
+    const existingUsers = await authRepositories.hasUser(email)
 
     if (existingUsers.rowCount > 0) {
       return res.sendStatus(409);
@@ -22,10 +18,7 @@ export const postSignIn = async (req, res) => {
 
     const hashedPassword = bcrypt.hashSync(password, 12);
 
-    await connection.query(
-      `INSERT INTO "users" ("name", "email", "password") VALUES ($1, $2, $3)`,
-      [name, email, hashedPassword]
-    );
+    await authRepositories.signin(name,email,hashedPassword)
 
     res.sendStatus(201);
   } catch (err) {
@@ -42,7 +35,7 @@ export const postSignUp = async (req, res) => {
       return res.sendStatus(422);
     }
 
-    const user = await authRepositories.signup();
+    const user = await authRepositories.signup(email);
 
     if (!user || !bcrypt.compareSync(password, user.password)) {
       return res.sendStatus(401);

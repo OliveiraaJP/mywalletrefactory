@@ -1,10 +1,21 @@
 import connection from "../config/database.js";
 
-async function signin() {
+async function hasUser(email){
+   return await connection.query(
+    `SELECT * FROM "users" WHERE "email"=$1`,
+    [email]
+  );
 
 }
 
-async function signup(){
+async function signin(name,email,hashedPassword) {
+return  await connection.query(
+  `INSERT INTO "users" ("name", "email", "password") VALUES ($1, $2, $3)`,
+  [name, email, hashedPassword]
+);
+}
+
+async function signup(email){
     const { rows } = await connection.query(
         `SELECT * FROM "users" WHERE "email"=$1`,
         [email]
@@ -16,7 +27,8 @@ async function signup(){
 
 const authRepositories = {
 signin,
-signup
+signup,
+hasUser
 };
 
 export default authRepositories
